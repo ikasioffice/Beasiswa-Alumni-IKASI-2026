@@ -84,6 +84,19 @@ body{
 :root[data-theme="dark"] .theme-toggle .icon-moon{ display:none; }
 :root[data-theme="dark"] .theme-toggle .icon-sun{ display:block; }
 
+.music-toggle{
+  display:flex; align-items:center; justify-content:center; flex:none;
+  width:36px; height:36px; border-radius:50%;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.35);
+  color:#fff; cursor:pointer;
+  transition:background-color .2s ease, transform .2s ease;
+}
+.music-toggle:hover{ background:rgba(255,255,255,.18); transform:translateY(-1px); }
+.music-toggle svg{ display:block; }
+.music-toggle .icon-music-on{ display:none; }
+.music-toggle.is-playing .icon-music-off{ display:none; }
+.music-toggle.is-playing .icon-music-on{ display:block; }
+
 .page-head{ padding:2.6rem 0 1.4rem; }
 .eyebrow{
   display:inline-block; font-family:var(--font-mono); font-size:.72rem; letter-spacing:.1em;
@@ -216,12 +229,22 @@ tr:last-child td{ border-bottom:none; }
 <nav class="top-nav">
   <div class="container top-nav-inner">
     <a href="index.html">&larr; Kembali ke Halaman Utama</a>
-    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Ganti tampilan siang/malam">
-      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
-      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-    </button>
+    <div style="display:flex; align-items:center; gap:.6rem;">
+      <button class="music-toggle" id="musicToggle" type="button" aria-label="Nyalakan musik">
+        <svg class="icon-music-off" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+        <svg class="icon-music-on" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </button>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Ganti tampilan siang/malam">
+        <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </div>
   </div>
 </nav>
+
+<!-- Musik latar diputar lewat YouTube (bukan file lokal) demi keamanan hak cipta -->
+<div id="bgMusicPlayer" style="position:fixed; left:-9999px; top:-9999px; width:1px; height:1px; overflow:hidden; opacity:0; pointer-events:none;" aria-hidden="true"></div>
+<script src="https://www.youtube.com/iframe_api" async></script>
 
 <div class="container">
 
@@ -239,8 +262,6 @@ tr:last-child td{ border-bottom:none; }
         <button type="submit" class="btn btn-primary" style="width:100%;" id="loginBtn">Masuk</button>
         <div class="status-msg err hidden" id="loginError">Password salah. Coba lagi.</div>
       </form>
-      <button type="button" class="btn btn-ghost" style="width:100%; margin-top:.9rem;" id="previewBtn">Lihat Pratinjau Tampilan (tanpa login)</button>
-      <p style="font-size:.78rem; margin-top:.6rem;">Untuk cek/edit susunan halaman saja &mdash; data di pratinjau ini contoh, bukan data asli.</p>
     </div>
   </div>
 
@@ -419,10 +440,7 @@ function clearPassword(){
   try{ sessionStorage.removeItem(STORAGE_KEY); }catch(e){}
 }
 
-var isPreviewMode = false;
-
 function showDashboard(){
-  isPreviewMode = false;
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('dashboardView').classList.remove('hidden');
   switchTab('keuangan');
@@ -430,7 +448,6 @@ function showDashboard(){
   loadSubmissions();
 }
 function showLogin(){
-  isPreviewMode = false;
   document.getElementById('dashboardView').classList.add('hidden');
   document.getElementById('loginView').classList.remove('hidden');
 }
@@ -445,13 +462,8 @@ function switchTab(name){
 document.getElementById('tabBtnKeuangan').addEventListener('click', function(){ switchTab('keuangan'); });
 document.getElementById('tabBtnWebsite').addEventListener('click', function(){
   switchTab('website');
-  if(isPreviewMode){
-    applyContentValues({});
-    document.getElementById('currentProposalInfo').textContent = 'Mode pratinjau: info file tidak tersedia di sini.';
-  } else {
-    loadContentForm();
-    loadProposalInfo();
-  }
+  loadContentForm();
+  loadProposalInfo();
 });
 
 // ---- File Proposal (PDF) ----
@@ -474,11 +486,6 @@ document.getElementById('uploadProposalBtn').addEventListener('click', function(
   var fileInput = document.getElementById('proposalFile');
   statusEl.classList.remove('hidden');
 
-  if(isPreviewMode){
-    statusEl.textContent = 'Mode pratinjau: unggah file tidak tersedia di sini.';
-    statusEl.className = 'status-msg err';
-    return;
-  }
   var file = fileInput.files[0];
   if(!file){
     statusEl.textContent = 'Pilih file PDF terlebih dahulu.';
@@ -532,35 +539,9 @@ document.getElementById('uploadProposalBtn').addEventListener('click', function(
   reader.readAsDataURL(file);
 });
 
-var previewSampleRows = [
-  { ID:'contoh-1', Waktu: new Date().toISOString(), Nama: 'Nadia Putri (contoh)', WhatsApp: '0812xxxxxxx', Nominal: 500000, TanggalTransfer: '2026-08-05', Metode: 'QRIS', Catatan: '', Status:'Belum Diverifikasi', BuktiTransferURL:'' },
-  { ID:'contoh-2', Waktu: new Date().toISOString(), Nama: 'Rian Firmansyah (contoh)', WhatsApp: '0813xxxxxxx', Nominal: 1000000, TanggalTransfer: '2026-08-06', Metode: 'Transfer Bank BSI', Catatan: 'Semoga bermanfaat', Status:'Terverifikasi', BuktiTransferURL:'https://drive.google.com/uc?export=download&id=contoh' }
-];
-
-function renderPreview(){
-  var total = previewSampleRows.reduce(function(sum, r){
-    return sum + (r.Status === 'Terverifikasi' ? Number(r.Nominal) || 0 : 0);
-  }, 0);
-  document.getElementById('danaTerkumpul').value = total;
-  renderSubmissions(previewSampleRows);
-}
-
-function showPreviewDashboard(){
-  isPreviewMode = true;
-  document.getElementById('loginView').classList.add('hidden');
-  document.getElementById('dashboardView').classList.remove('hidden');
-  switchTab('keuangan');
-
-  document.getElementById('targetDana').value = 99000000;
-  renderPreview();
-  applyContentValues({});
-}
-
 function checkConfigured(){
   return IKASI_API_URL && IKASI_API_URL.indexOf('http') === 0;
 }
-
-document.getElementById('previewBtn').addEventListener('click', showPreviewDashboard);
 
 // ---- Login ----
 document.getElementById('loginForm').addEventListener('submit', function(e){
@@ -613,13 +594,6 @@ document.getElementById('siteDataForm').addEventListener('submit', function(e){
   e.preventDefault();
   var statusEl = document.getElementById('siteDataStatus');
   var btn = document.getElementById('saveSiteDataBtn');
-  statusEl.classList.remove('hidden');
-
-  if(isPreviewMode){
-    statusEl.textContent = 'Mode pratinjau: perubahan tidak disimpan. Sambungkan IKASI_API_URL lalu masuk dengan password untuk menyimpan sungguhan.';
-    statusEl.className = 'status-msg err';
-    return;
-  }
   statusEl.classList.add('hidden');
   btn.disabled = true; btn.textContent = 'Menyimpan...';
 
@@ -700,12 +674,6 @@ document.getElementById('submissionsBody').addEventListener('click', function(e)
   if(btn.hasAttribute('data-delete')){
     if(!confirm('Hapus data bukti dukungan ini? Tindakan ini tidak bisa dibatalkan.')) return;
 
-    if(isPreviewMode){
-      previewSampleRows = previewSampleRows.filter(function(r){ return r.ID !== id; });
-      renderPreview();
-      return;
-    }
-
     btn.disabled = true;
     btn.textContent = 'Menghapus...';
     callApi('deleteSubmission', { password: getPassword(), id: id }).then(function(res){
@@ -728,13 +696,6 @@ document.getElementById('submissionsBody').addEventListener('click', function(e)
   // ---- Verifikasi / Batalkan ----
   var verified = btn.getAttribute('data-verified') === 'true';
 
-  if(isPreviewMode){
-    var sample = previewSampleRows.find(function(r){ return r.ID === id; });
-    if(sample){ sample.Status = verified ? 'Terverifikasi' : 'Belum Diverifikasi'; }
-    renderPreview();
-    return;
-  }
-
   btn.disabled = true;
   btn.textContent = 'Memproses...';
 
@@ -755,7 +716,6 @@ document.getElementById('submissionsBody').addEventListener('click', function(e)
 });
 
 function loadSubmissions(){
-  if(isPreviewMode) return;
   var body = document.getElementById('submissionsBody');
   var empty = document.getElementById('submissionsEmpty');
   body.innerHTML = '<tr><td colspan="10" class="empty-note">Memuat...</td></tr>';
@@ -776,13 +736,7 @@ function loadSubmissions(){
   });
 }
 
-document.getElementById('refreshBtn').addEventListener('click', function(){
-  if(isPreviewMode){
-    showPreviewDashboard();
-    return;
-  }
-  loadSubmissions();
-});
+document.getElementById('refreshBtn').addEventListener('click', loadSubmissions);
 
 // ---- Tambah Data Manual ----
 document.getElementById('toggleManualAddBtn').addEventListener('click', function(){
@@ -807,20 +761,6 @@ document.getElementById('manualAddForm').addEventListener('submit', function(e){
     metode: document.getElementById('maMetode').value,
     catatan: document.getElementById('maCatatan').value
   };
-
-  if(isPreviewMode){
-    previewSampleRows.unshift({
-      ID: 'manual-' + Date.now(),
-      Waktu: new Date().toISOString(),
-      Nama: fields.nama, WhatsApp: fields.wa, Nominal: Number(fields.nominal) || 0,
-      TanggalTransfer: fields.tanggal, Metode: fields.metode, Catatan: fields.catatan,
-      Status: 'Belum Diverifikasi', BuktiTransferURL: ''
-    });
-    renderPreview();
-    document.getElementById('manualAddForm').reset();
-    document.getElementById('manualAddForm').classList.add('hidden');
-    return;
-  }
 
   statusEl.classList.add('hidden');
   btn.disabled = true; btn.textContent = 'Menyimpan...';
@@ -1223,14 +1163,6 @@ document.getElementById('contentForm').addEventListener('submit', function(e){
   e.preventDefault();
   var statusEl = document.getElementById('contentStatus');
   var btn = document.getElementById('saveContentBtn');
-  statusEl.classList.remove('hidden');
-
-  if(isPreviewMode){
-    statusEl.textContent = 'Mode pratinjau: perubahan tidak disimpan. Sambungkan IKASI_API_URL lalu masuk dengan password untuk menyimpan sungguhan.';
-    statusEl.className = 'status-msg err';
-    return;
-  }
-
   statusEl.classList.add('hidden');
   btn.disabled = true; btn.textContent = 'Menyimpan...';
 
@@ -1276,6 +1208,57 @@ if(themeToggle){
     var next = isDark ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     try{ localStorage.setItem('ikasi-theme', next); }catch(e){}
+  });
+}
+
+// Musik latar (on/off) -- diputar lewat YouTube (bukan file lokal) demi keamanan hak cipta
+var musicToggle = document.getElementById('musicToggle');
+if(musicToggle){
+  var MUSIC_KEY = 'ikasi-music';
+  var YT_VIDEO_ID = 'zbPt9LkPT4c';
+  var ytPlayer = null;
+
+  function setMusicUI(playing){
+    musicToggle.classList.toggle('is-playing', playing);
+    musicToggle.setAttribute('aria-label', playing ? 'Matikan musik' : 'Nyalakan musik');
+  }
+
+  window.onYouTubeIframeAPIReady = function(){
+    ytPlayer = new YT.Player('bgMusicPlayer', {
+      videoId: YT_VIDEO_ID,
+      playerVars: {
+        autoplay: 0,
+        controls: 0,
+        loop: 1,
+        playlist: YT_VIDEO_ID,
+        playsinline: 1,
+        disablekb: 1,
+        fs: 0,
+        modestbranding: 1
+      },
+      events: {
+        onReady: function(){
+          try{
+            if(localStorage.getItem(MUSIC_KEY) === 'on'){ ytPlayer.playVideo(); }
+          }catch(e){}
+        },
+        onStateChange: function(ev){
+          if(ev.data === YT.PlayerState.PLAYING){ setMusicUI(true); }
+          else if(ev.data === YT.PlayerState.PAUSED || ev.data === YT.PlayerState.ENDED){ setMusicUI(false); }
+        }
+      }
+    });
+  };
+
+  musicToggle.addEventListener('click', function(){
+    if(!ytPlayer || typeof ytPlayer.getPlayerState !== 'function') return;
+    if(ytPlayer.getPlayerState() === YT.PlayerState.PLAYING){
+      ytPlayer.pauseVideo();
+      try{ localStorage.setItem(MUSIC_KEY, 'off'); }catch(e){}
+    } else {
+      ytPlayer.playVideo();
+      try{ localStorage.setItem(MUSIC_KEY, 'on'); }catch(e){}
+    }
   });
 }
 
