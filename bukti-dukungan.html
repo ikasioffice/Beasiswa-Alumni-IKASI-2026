@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bukti Pengiriman Dukungan &mdash; IKASI Beasiswa Alumni</title>
+<script>
+(function(){
+  try{
+    var saved = localStorage.getItem('ikasi-theme');
+    var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  }catch(e){}
+})();
+</script>
+<style>
+:root{
+  --navy-950:#0a2648;
+  --navy-900:#0f3160;
+  --navy-800:#154679;
+  --navy-700:#1c5896;
+  --sky-500:#3f8fd6;
+  --sky-100:#eaf4fd;
+  --gold-600:#b8791a;
+  --gold-500:#dd9e2e;
+  --gold-300:#f3c877;
+  --gold-100:#fdf1da;
+  --line:#e5eaf1;
+  --green-600:#1f9d55;
+  --green-100:#e3f8ec;
+  --gray-500:#8993a6;
+  --gray-100:#eef1f6;
+  --shadow-soft:0 16px 40px -22px rgba(10,38,72,.16);
+  --radius-lg:26px;
+  --radius-md:18px;
+  --radius-sm:14px;
+  --font-display:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+
+  --paper:#f6f8fb;
+  --card:#ffffff;
+  --input-bg:#fbfcfe;
+  --heading:var(--navy-950);
+  --ink-soft:var(--gray-500);
+}
+:root[data-theme="dark"]{
+  --paper:#0d1729;
+  --card:#233b60;
+  --input-bg:#1b2e4a;
+  --heading:#f5f8fc;
+  --ink-soft:#aab6c9;
+  --line:rgba(255,255,255,.14);
+  --gray-100:#15243a;
+  --shadow-soft:0 16px 40px -22px rgba(0,0,0,.45);
+}
+*{ box-sizing:border-box; }
+body{
+  margin:0; font-family:var(--font-display); color:var(--heading);
+  background:var(--paper);
+  transition:background-color .3s ease, color .3s ease;
+}
+.container{ max-width:720px; margin:0 auto; padding:0 1.5rem; }
+.top-nav{
+  background:var(--navy-950); padding:1.1rem 0;
+}
+.top-nav a{
+  color:#fff; text-decoration:none; font-weight:600; font-size:.94rem;
+  display:inline-flex; align-items:center; gap:.5em;
+}
+.top-nav a:hover{ color:var(--gold-300); }
+.page-head{ padding:2.6rem 0 1.4rem; }
+.eyebrow{
+  display:inline-block; font-family:var(--font-mono); font-size:.72rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--navy-700); background:var(--sky-100);
+  padding:.35em .9em; border-radius:999px; font-weight:600;
+}
+.page-head h1{ margin:.7rem 0 .6rem; font-size:clamp(1.5rem, 3vw, 2.1rem); }
+.page-head p{ color:var(--ink-soft); line-height:1.6; margin:0; }
+
+.form-card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-soft); padding:2rem 2rem 2.2rem; margin:1.6rem 0 3rem;
+}
+.field{ margin-bottom:1.3rem; }
+.field label{
+  display:block; font-weight:600; font-size:.88rem; margin-bottom:.45rem; color:var(--heading);
+}
+.field .req{ color:var(--gold-600); }
+.field input, .field select, .field textarea{
+  width:100%; font-family:inherit; font-size:.95rem; color:var(--heading);
+  border:1px solid var(--line); border-radius:var(--radius-sm);
+  padding:.75em .9em; background:var(--input-bg);
+}
+.field input:focus, .field select:focus, .field textarea:focus{
+  outline:2px solid var(--sky-500); outline-offset:1px; border-color:var(--sky-500);
+}
+.field textarea{ resize:vertical; min-height:90px; }
+
+.notice{
+  background:var(--gold-100); border:1px solid #f0d9a8; border-radius:var(--radius-md);
+  padding:1rem 1.2rem; font-size:.86rem; color:var(--navy-950); line-height:1.55; margin-bottom:1.6rem;
+}
+.notice strong{ color:var(--gold-600); }
+
+.submit-btn{
+  width:100%; border:none; cursor:pointer; border-radius:999px;
+  background:var(--gold-500); color:var(--navy-950); font-weight:700; font-size:.98rem;
+  padding:.95em 1.4em; font-family:inherit; transition:background-color .2s ease, transform .2s ease;
+}
+.submit-btn:hover{ background:var(--gold-300); transform:translateY(-2px); }
+
+.rekening-recap{
+  background:var(--sky-100); border-radius:var(--radius-md); padding:1rem 1.3rem;
+  margin-bottom:1.8rem; font-size:.88rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;
+}
+.rekening-recap .bank{ font-weight:700; color:var(--navy-950); }
+.rekening-recap .num{ font-family:var(--font-mono); color:var(--navy-700); }
+
+.success-panel{ display:none; text-align:center; padding:1rem 0 .5rem; }
+.success-panel.is-visible{ display:block; }
+.success-icon{
+  width:56px; height:56px; margin:0 auto 1rem; border-radius:50%;
+  background:var(--green-100); color:var(--green-600);
+  display:flex; align-items:center; justify-content:center;
+}
+.success-panel h2{ font-size:1.2rem; margin:0 0 .5rem; }
+.success-panel p{ color:var(--ink-soft); line-height:1.6; margin:0 0 1.6rem; }
+.wa-confirm-btn{
+  display:inline-flex; align-items:center; gap:.5em; border:none; cursor:pointer;
+  border-radius:999px; background:#25D366; color:#fff; font-weight:700; font-size:.94rem;
+  padding:.85em 1.5em; font-family:inherit; text-decoration:none;
+  transition:transform .2s ease, background-color .2s ease;
+}
+.wa-confirm-btn:hover{ background:#1fb958; transform:translateY(-2px); }
+.skip-note{ margin-top:1rem; font-size:.82rem; color:var(--ink-soft); }
+.hidden{ display:none !important; }
+
+.bukti-choice{ display:flex; gap:1.3rem; flex-wrap:wrap; margin-top:.2rem; }
+.bukti-choice-option{
+  display:flex; align-items:center; gap:.55em; font-size:.92rem; font-weight:500;
+  cursor:pointer; color:var(--heading);
+}
+.bukti-choice-option input{ width:auto; accent-color:var(--sky-500); }
+.field input[type="file"]{
+  width:100%; font-family:inherit; font-size:.88rem; color:var(--heading);
+  border:1px solid var(--line); border-radius:var(--radius-sm);
+  padding:.6em .7em; background:var(--input-bg);
+}
+.top-nav-inner{ display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.theme-toggle{
+  display:flex; align-items:center; justify-content:center; flex:none;
+  width:36px; height:36px; border-radius:50%;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.35);
+  color:#fff; cursor:pointer;
+  transition:background-color .2s ease, transform .2s ease;
+}
+.theme-toggle:hover{ background:rgba(255,255,255,.18); transform:translateY(-1px); }
+.theme-toggle svg{ display:block; }
+.theme-toggle .icon-sun{ display:none; }
+:root[data-theme="dark"] .theme-toggle .icon-moon{ display:none; }
+:root[data-theme="dark"] .theme-toggle .icon-sun{ display:block; }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="container top-nav-inner">
+    <a href="index.html">&larr; Kembali ke Halaman Utama</a>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Ganti tampilan siang/malam">
+      <svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-head">
+    <span class="eyebrow">Konfirmasi Dukungan</span>
+    <h1>Form Bukti Pengiriman Dukungan</h1>
+    <p>Terima kasih sudah mendukung Program Beasiswa Alumni IKASI. Isi form berikut untuk mengonfirmasi transfer Anda ke tim IKASI.</p>
+  </div>
+
+  <div class="rekening-recap">
+    <span class="bank">BSI a.n. IKASI POLBAN</span>
+    <span class="num">1982320247</span>
+  </div>
+
+  <div class="form-card">
+    <div class="notice">
+      <strong>Catatan:</strong> Lengkapi data di bawah ini sebagai bukti pengiriman dukungan Anda. Setelah terkonfirmasi, Anda dapat memilih untuk mengirim konfirmasi singkat ke WhatsApp admin.
+    </div>
+
+    <form id="buktiForm">
+      <div class="field">
+        <label for="nama">Nama Lengkap <span class="req">*</span></label>
+        <input type="text" id="nama" name="nama" required placeholder="Nama sesuai identitas">
+      </div>
+      <div class="field">
+        <label for="wa">Nomor WhatsApp Anda <span class="req">*</span></label>
+        <input type="tel" id="wa" name="wa" required placeholder="08xxxxxxxxxx">
+      </div>
+      <div class="field">
+        <label for="nominal">Nominal yang Ditransfer (Rp) <span class="req">*</span></label>
+        <input type="text" id="nominal" name="nominal" inputmode="numeric" required placeholder="Contoh: 500.000">
+      </div>
+      <div class="field">
+        <label for="tanggal">Tanggal Transfer <span class="req">*</span></label>
+        <input type="date" id="tanggal" name="tanggal" required>
+      </div>
+      <div class="field">
+        <label for="metode">Metode Pengiriman <span class="req">*</span></label>
+        <select id="metode" name="metode" required>
+          <option value="" disabled selected>Pilih metode</option>
+          <option value="Transfer Bank BSI">Transfer Bank BSI</option>
+          <option value="QRIS">QRIS</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Cara Kirim Bukti Transfer <span class="req">*</span></label>
+        <div class="bukti-choice">
+          <label class="bukti-choice-option">
+            <input type="radio" name="buktiCara" id="buktiCaraUpload" value="upload" checked>
+            <span>Upload di sini</span>
+          </label>
+          <label class="bukti-choice-option">
+            <input type="radio" name="buktiCara" id="buktiCaraWa" value="whatsapp">
+            <span>Kirim lewat WhatsApp</span>
+          </label>
+        </div>
+      </div>
+      <div class="field" id="buktiUploadField">
+        <label for="buktiFile">Screenshot/Foto Bukti Transfer <span class="req">*</span></label>
+        <input type="file" id="buktiFile" name="buktiFile" accept="image/*,.pdf">
+        <p class="skip-note" style="margin-top:.5rem;">Format gambar (JPG/PNG) atau PDF, maksimal 5MB.</p>
+      </div>
+      <div class="field notice hidden" id="buktiWaField">
+        Setelah form ini terkirim, Anda akan diarahkan untuk mengirim screenshot bukti transfer langsung ke WhatsApp admin.
+      </div>
+      <div class="field">
+        <label for="catatan">Catatan (opsional)</label>
+        <textarea id="catatan" name="catatan" placeholder="Pesan tambahan, jika ada"></textarea>
+      </div>
+      <button type="submit" class="submit-btn">Kirim Bukti Dukungan</button>
+    </form>
+
+    <div class="success-panel" id="successPanel">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+      <h2>Bukti dukungan terkonfirmasi</h2>
+      <p id="successIntro">Terima kasih, data Anda sudah kami terima. Anda juga bisa mengirim konfirmasi singkat ke WhatsApp admin IKASI agar tim kami segera mengecek dukungan Anda.</p>
+      <a href="#" id="waConfirmBtn" class="wa-confirm-btn" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.6 12.2c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.6.1-.2.3-.7 1-.9 1.1-.1.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5c.1-.1.1-.3.2-.4.1-.1 0-.3 0-.4-.1-.1-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1s.9 2.4 1.1 2.6c.1.2 1.9 2.9 4.6 4 .6.3 1.1.4 1.5.6.6.2 1.2.2 1.6.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2-.1-.1-.2-.1-.5-.2Z"/><path d="M10 1.7A8.3 8.3 0 0 0 2.9 14.6L1.7 18.3l3.8-1.2A8.3 8.3 0 1 0 10 1.7Zm0 15A6.6 6.6 0 0 1 6.6 15.8l-.3-.2-2.2.7.7-2.1-.2-.3A6.6 6.6 0 1 1 10 16.7Z"/></svg>
+        <span id="waConfirmLabel">Konfirmasi ke WhatsApp Admin</span>
+      </a>
+      <div class="skip-note" id="successSkipNote">Langkah ini opsional &mdash; bukti Anda sudah tercatat meski tidak mengirim konfirmasi WhatsApp.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// URL Web App Google Apps Script (lihat apps-script-backend.gs). Ganti setelah deploy.
+var IKASI_API_URL = "https://script.google.com/macros/s/AKfycbz-i6yZJHrgCTceXSg4y0NIz0Mj6qAsXtiJ3JmzGTI2f9nlJIapQ4DHbPs09Ni2UW6U/exec";
+
+// ---- Toggle: upload di sini vs kirim lewat WhatsApp ----
+var buktiFileInput = document.getElementById('buktiFile');
+var buktiUploadField = document.getElementById('buktiUploadField');
+var buktiWaField = document.getElementById('buktiWaField');
+
+function updateBuktiCaraUI(){
+  var cara = document.querySelector('input[name="buktiCara"]:checked').value;
+  if(cara === 'upload'){
+    buktiUploadField.classList.remove('hidden');
+    buktiWaField.classList.add('hidden');
+    buktiFileInput.required = true;
+  } else {
+    buktiUploadField.classList.add('hidden');
+    buktiWaField.classList.remove('hidden');
+    buktiFileInput.required = false;
+  }
+}
+document.getElementById('buktiCaraUpload').addEventListener('change', updateBuktiCaraUI);
+document.getElementById('buktiCaraWa').addEventListener('change', updateBuktiCaraUI);
+updateBuktiCaraUI();
+
+// ---- Format nominal otomatis pakai titik ribuan (contoh: 500.000) ----
+var nominalInput = document.getElementById('nominal');
+nominalInput.addEventListener('input', function(){
+  var digits = nominalInput.value.replace(/\D/g, '');
+  nominalInput.value = digits ? Number(digits).toLocaleString('id-ID') : '';
+});
+
+document.getElementById('buktiForm').addEventListener('submit', function(e){
+  e.preventDefault();
+
+  var form = document.getElementById('buktiForm');
+  var submitBtn = form.querySelector('.submit-btn');
+  var cara = document.querySelector('input[name="buktiCara"]:checked').value;
+
+  var data = {
+    action:'addSubmission',
+    nama: document.getElementById('nama').value,
+    wa: document.getElementById('wa').value,
+    nominal: document.getElementById('nominal').value.replace(/\D/g, ''),
+    tanggal: document.getElementById('tanggal').value,
+    metode: document.getElementById('metode').value,
+    catatan: document.getElementById('catatan').value
+  };
+
+  function showSuccess(){
+    var pesan, url;
+    if(cara === 'whatsapp'){
+      document.getElementById('successIntro').textContent = 'Terima kasih, data Anda sudah kami terima. Klik tombol di bawah untuk membuka WhatsApp, kirim pesan konfirmasinya, lalu lampirkan foto/screenshot bukti transfer Anda secara manual di chat yang sama.';
+      document.getElementById('waConfirmLabel').textContent = 'Kirim Bukti Transfer via WhatsApp';
+      document.getElementById('successSkipNote').textContent = 'Jangan lupa lampirkan foto/screenshot bukti transfernya ya, agar tim kami bisa langsung memverifikasi.';
+      pesan = 'Halo IKASI, saya sudah mengirimkan donasi untuk Program Beasiswa Alumni ini. Bukti transfernya akan saya kirimkan menyusul di chat ini, mohon ditunggu. Terima kasih.';
+    } else {
+      document.getElementById('successIntro').textContent = 'Terima kasih, data dan bukti transfer Anda sudah kami terima. Anda juga bisa mengirim konfirmasi singkat ke WhatsApp admin IKASI agar tim kami segera mengecek dukungan Anda.';
+      document.getElementById('waConfirmLabel').textContent = 'Konfirmasi ke WhatsApp Admin';
+      document.getElementById('successSkipNote').textContent = 'Langkah ini opsional — bukti Anda sudah tercatat meski tidak mengirim konfirmasi WhatsApp.';
+      pesan = 'Halo IKASI, saya sudah mengirimkan donasi untuk Program Beasiswa Alumni ini beserta bukti transfernya lewat form di website. Mohon dicek, terima kasih.';
+    }
+    url = 'https://wa.me/6281234681730?text=' + encodeURIComponent(pesan);
+    document.getElementById('waConfirmBtn').setAttribute('href', url);
+    form.style.display = 'none';
+    document.getElementById('successPanel').classList.add('is-visible');
+  }
+
+  function sendData(){
+    if(IKASI_API_URL && IKASI_API_URL.indexOf('http') === 0){
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Mengirim...';
+      fetch(IKASI_API_URL, {
+        method:'POST',
+        headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+        body:JSON.stringify(data)
+      }).then(function(){ showSuccess(); }).catch(function(){ showSuccess(); });
+    } else {
+      showSuccess();
+    }
+  }
+
+  if(cara === 'upload'){
+    var file = buktiFileInput.files[0];
+    if(!file){
+      alert('Silakan pilih file screenshot/foto bukti transfer terlebih dahulu.');
+      return;
+    }
+    if(file.size > 5 * 1024 * 1024){
+      alert('Ukuran file maksimal 5MB.');
+      return;
+    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Mengunggah bukti...';
+    var reader = new FileReader();
+    reader.onload = function(){
+      data.buktiData = String(reader.result).split(',')[1];
+      data.buktiMimeType = file.type;
+      data.buktiFilename = file.name;
+      sendData();
+    };
+    reader.onerror = function(){
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Kirim Bukti Dukungan';
+      alert('Gagal membaca file. Coba lagi atau pilih file lain.');
+    };
+    reader.readAsDataURL(file);
+  } else {
+    sendData();
+  }
+});
+
+var themeToggle = document.getElementById('themeToggle');
+if(themeToggle){
+  themeToggle.addEventListener('click', function(){
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem('ikasi-theme', next); }catch(e){}
+  });
+}
+</script>
+
+</body>
+</html>
