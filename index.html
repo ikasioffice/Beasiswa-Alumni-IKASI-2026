@@ -653,6 +653,26 @@ section{ position:relative; }
 }
 .budget-cta{ display:flex; justify-content:center; margin:1.6rem auto 0; width:max-content; }
 
+.donor-list-wrap{
+  margin-top:1.4rem; background:var(--card); border:1px solid var(--line); border-radius:var(--radius-md);
+  overflow:hidden;
+}
+.donor-list-head{
+  padding:.9rem 1.1rem; font-family:var(--font-body); font-weight:700; text-transform:uppercase;
+  letter-spacing:.06em; font-size:.92rem; color:var(--heading); background:var(--gray-100);
+  border-bottom:1px solid var(--line);
+}
+.donor-list{ min-height:260px; max-height:340px; overflow-y:auto; }
+.donor-row{
+  display:flex; justify-content:space-between; align-items:baseline; gap:.9rem;
+  padding:.65rem 1.1rem; border-bottom:1px solid var(--line); font-size:.86rem;
+}
+.donor-row:last-child{ border-bottom:none; }
+.donor-name{ color:var(--heading); font-weight:500; }
+.donor-angkatan{ color:var(--ink-soft); font-size:.78rem; margin-left:.4em; }
+.donor-nominal{ font-family:var(--font-mono); color:var(--gold-600); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.donor-list-empty{ padding:1.1rem; font-size:.85rem; color:var(--ink-soft); text-align:center; }
+
 .budget-note{
   background:linear-gradient(160deg, var(--navy-950), var(--navy-800));
   color:#fff; border-radius:var(--radius-lg); padding:2.1rem;
@@ -681,6 +701,8 @@ section{ position:relative; }
 }
 .qris-box img{ width:100%; max-width:190px; border-radius:calc(var(--radius-sm) - 4px); }
 .qris-caption{ font-size:.78rem; color:var(--ink-soft); }
+.donor-cta-text{ margin-top:1.3rem; text-align:center; }
+.budget-note .budget-cta{ margin-top:.9rem; }
 .anggaran-note{ margin-top:2.2rem; font-size:.9rem; color:var(--ink-soft); max-width:72ch; }
 
 @media (max-width:900px){ .budget-wrap{ grid-template-columns:1fr; } }
@@ -1078,13 +1100,18 @@ section{ position:relative; }
           <div class="budget-row-head"><span class="name">Dana Terkumpul dari Alumni</span><span class="val" id="raisedPercentVal">0%</span></div>
           <div class="budget-bar"><span id="raisedBarSpan" style="width:0%"></span></div>
           <div class="budget-raised-big" id="raisedBigVal">Rp 0<span>terkumpul</span></div>
-          <a href="bukti-dukungan.html" class="btn btn-primary budget-cta">Kirim Bukti Dukungan</a>
+          <div class="donor-list-wrap">
+            <div class="donor-list-head">Data Alumni yang Memberi Dukungan</div>
+            <div class="donor-list" id="donorList">
+              <p class="donor-list-empty">Belum ada data dukungan yang terverifikasi.</p>
+            </div>
+          </div>
         </div>
       </div>
       <div class="reveal">
         <div class="budget-note">
           <h3 id="ck-rekening_judul">Rekening Resmi IKASI</h3>
-          <p id="ck-rekening_desc">Dana disalurkan melalui rekening resmi berikut dan dikelola secara transparan dengan laporan berkala kepada seluruh donatur.</p>
+          <p id="ck-rekening_desc">Bagi yang berkenan berdonasi, dapat mengirimkan donasi dengan nominal diakhiri angka 11 sebagai kode pendataan.<br><br>Contoh:<br>Rp50.011<br>Rp100.011</p>
           <div class="rekening-box">
             <span class="rekening-bank">BSI a.n. IKASI POLBAN</span>
             <span class="rekening-num">1982320247</span>
@@ -1093,6 +1120,8 @@ section{ position:relative; }
             <img src="QRIS_IKASI_crop.png" alt="QRIS IKASI POLBAN" loading="lazy">
             <span class="qris-caption">Satu QRIS untuk semua &mdash; scan untuk donasi</span>
           </div>
+          <p class="donor-cta-text">Sudah transfer lewat rekening atau QRIS di atas? Klik tombol di bawah untuk mengirim bukti transfer agar dukungan Anda diverifikasi admin dan tercatat dalam Dana Terkumpul.</p>
+          <a href="bukti-dukungan.html" class="btn btn-primary budget-cta">Kirim Bukti Dukungan</a>
         </div>
       </div>
     </div>
@@ -1369,6 +1398,44 @@ var IKASI_API_URL = "https://script.google.com/macros/s/AKfycbz-i6yZJHrgCTceXSg4
         }
       }
     }).catch(function(){ /* biarkan nilai statis di halaman jika gagal memuat */ });
+
+    fetch(IKASI_API_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body:JSON.stringify({ action:'getVerifiedSubmissions' })
+    }).then(function(res){ return res.json(); }).then(function(res){
+      var listEl = document.getElementById('donorList');
+      if(!listEl || !res || !res.ok || !res.rows) return;
+      if(res.rows.length === 0){
+        listEl.innerHTML = '<p class="donor-list-empty">Belum ada data dukungan yang terverifikasi.</p>';
+        return;
+      }
+      listEl.innerHTML = '';
+      res.rows.forEach(function(row){
+        var item = document.createElement('div');
+        item.className = 'donor-row';
+
+        var who = document.createElement('span');
+        var nameSpan = document.createElement('span');
+        nameSpan.className = 'donor-name';
+        nameSpan.textContent = row.nama || 'Alumni';
+        who.appendChild(nameSpan);
+        if(row.angkatan){
+          var angkatanSpan = document.createElement('span');
+          angkatanSpan.className = 'donor-angkatan';
+          angkatanSpan.textContent = 'Angkatan ' + row.angkatan;
+          who.appendChild(angkatanSpan);
+        }
+
+        var nominal = document.createElement('span');
+        nominal.className = 'donor-nominal';
+        nominal.textContent = formatRupiah(row.nominal);
+
+        item.appendChild(who);
+        item.appendChild(nominal);
+        listEl.appendChild(item);
+      });
+    }).catch(function(){ /* biarkan kotak kosong jika gagal memuat */ });
   }
 })();
 </script>

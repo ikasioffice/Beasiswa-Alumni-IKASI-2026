@@ -196,6 +196,10 @@ body{
         <input type="text" id="nama" name="nama" required placeholder="Nama sesuai identitas">
       </div>
       <div class="field">
+        <label for="angkatan">Angkatan <span class="req">*</span></label>
+        <input type="text" id="angkatan" name="angkatan" required placeholder="Contoh: 2015">
+      </div>
+      <div class="field">
         <label for="wa">Nomor WhatsApp Anda <span class="req">*</span></label>
         <input type="tel" id="wa" name="wa" required placeholder="08xxxxxxxxxx">
       </div>
@@ -300,6 +304,7 @@ document.getElementById('buktiForm').addEventListener('submit', function(e){
   var data = {
     action:'addSubmission',
     nama: document.getElementById('nama').value,
+    angkatan: document.getElementById('angkatan').value,
     wa: document.getElementById('wa').value,
     nominal: document.getElementById('nominal').value.replace(/\D/g, ''),
     tanggal: document.getElementById('tanggal').value,

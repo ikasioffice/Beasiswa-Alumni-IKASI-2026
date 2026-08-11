@@ -213,12 +213,26 @@ tr:last-child td{ border-bottom:none; }
 }
 .btn-sm.verify{ background:var(--green-600); color:#fff; }
 .btn-sm.verify:hover{ background:#188046; }
+.btn-sm.save{ background:var(--sky-500); color:#fff; }
+.btn-sm.save:hover{ background:var(--navy-700); }
+.btn-sm.edit{ background:transparent; color:var(--navy-700); border:1px solid var(--line); }
+.btn-sm.edit:hover{ background:var(--gray-100); }
+.btn-sm.cancel-edit{ background:transparent; color:var(--ink-soft); border:1px solid var(--line); }
+.btn-sm.cancel-edit:hover{ background:var(--gray-100); }
 .btn-sm.unverify{ background:transparent; color:var(--red-600); border:1px solid var(--red-100); }
 .btn-sm.unverify:hover{ background:var(--red-100); }
 .btn-sm.delete{ background:var(--red-600); color:#fff; }
 .btn-sm.delete:hover{ background:#a52d21; }
 .btn-sm:disabled{ opacity:.6; cursor:not-allowed; }
 .action-btns{ display:flex; gap:.4rem; flex-wrap:wrap; }
+.cell-input{
+  width:9.5em; font-family:inherit; font-size:.85rem; color:var(--heading);
+  border:1px solid var(--line); border-radius:8px;
+  padding:.4em .55em; background:var(--input-bg);
+}
+.cell-input:focus{ outline:2px solid var(--sky-500); outline-offset:1px; }
+.cell-input[data-field="Nominal"]{ width:7em; }
+.cell-input[data-field="Catatan"]{ width:12em; }
 
 .top-bar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:1.8rem; flex-wrap:wrap; gap:1rem; }
 .hidden{ display:none !important; }
@@ -323,21 +337,25 @@ tr:last-child td{ border-bottom:none; }
               <input type="text" id="maNama" required>
             </div>
             <div class="field">
-              <label for="maWa">WhatsApp</label>
-              <input type="text" id="maWa" placeholder="08xxxxxxxxxx">
+              <label for="maAngkatan">Angkatan</label>
+              <input type="text" id="maAngkatan" placeholder="Contoh: 2015">
             </div>
           </div>
           <div class="row-2">
+            <div class="field">
+              <label for="maWa">WhatsApp</label>
+              <input type="text" id="maWa" placeholder="08xxxxxxxxxx">
+            </div>
             <div class="field">
               <label for="maNominal">Nominal (Rp)</label>
               <input type="number" id="maNominal" required min="0" placeholder="Contoh: 500000">
             </div>
+          </div>
+          <div class="row-2">
             <div class="field">
               <label for="maTanggal">Tanggal Transfer</label>
               <input type="date" id="maTanggal">
             </div>
-          </div>
-          <div class="row-2">
             <div class="field">
               <label for="maMetode">Metode</label>
               <select id="maMetode">
@@ -347,6 +365,8 @@ tr:last-child td{ border-bottom:none; }
                 <option value="Lainnya">Lainnya</option>
               </select>
             </div>
+          </div>
+          <div class="row-2">
             <div class="field">
               <label for="maCatatan">Catatan (opsional)</label>
               <input type="text" id="maCatatan" placeholder="misal: dicatat manual oleh admin">
@@ -363,6 +383,7 @@ tr:last-child td{ border-bottom:none; }
               <tr>
                 <th>Waktu</th>
                 <th>Nama</th>
+                <th>Angkatan</th>
                 <th>WhatsApp</th>
                 <th>Nominal</th>
                 <th>Tanggal Transfer</th>
@@ -625,7 +646,19 @@ function escapeHtml(s){
   });
 }
 
+var lastSubmissionRows = [];
+var editingSubmissionId = null;
+
+function submissionCell(field, value, editing, inputType){
+  if(!editing){
+    return '<td>' + (field === 'Nominal' ? formatRupiah(value) : escapeHtml(value)) + '</td>';
+  }
+  var v = escapeHtml(value == null ? '' : value);
+  return '<td><input type="' + (inputType || 'text') + '" class="cell-input" data-field="' + field + '" value="' + v + '"></td>';
+}
+
 function renderSubmissions(rows){
+  lastSubmissionRows = rows || [];
   var body = document.getElementById('submissionsBody');
   var empty = document.getElementById('submissionsEmpty');
   if(!rows || rows.length === 0){
@@ -638,24 +671,37 @@ function renderSubmissions(rows){
   body.innerHTML = rows.map(function(r){
     var waktu = r.Waktu ? new Date(r.Waktu).toLocaleString('id-ID') : '';
     var verified = r.Status === 'Terverifikasi';
+    var editing = !verified && String(r.ID) === String(editingSubmissionId);
     var statusHtml = verified
       ? '<span class="status-badge verified">Terverifikasi</span>'
       : '<span class="status-badge unverified">Belum Diverifikasi</span>';
-    var actionHtml = '<div class="action-btns">' + (verified
-      ? '<button type="button" class="btn-sm unverify" data-id="' + escapeHtml(r.ID) + '" data-verified="false">Batalkan</button>'
-      : '<button type="button" class="btn-sm verify" data-id="' + escapeHtml(r.ID) + '" data-verified="true">Verifikasi</button>') +
-      '<button type="button" class="btn-sm delete" data-id="' + escapeHtml(r.ID) + '" data-delete="true">Hapus</button></div>';
+
+    var actionHtml;
+    if(editing){
+      actionHtml = '<div class="action-btns">' +
+        '<button type="button" class="btn-sm save" data-id="' + escapeHtml(r.ID) + '" data-save="true">Simpan</button>' +
+        '<button type="button" class="btn-sm cancel-edit" data-id="' + escapeHtml(r.ID) + '" data-cancel-edit="true">Batal</button>' +
+        '</div>';
+    } else {
+      actionHtml = '<div class="action-btns">' + (verified
+        ? '<button type="button" class="btn-sm unverify" data-id="' + escapeHtml(r.ID) + '" data-verified="false">Batalkan</button>'
+        : '<button type="button" class="btn-sm edit" data-id="' + escapeHtml(r.ID) + '" data-edit="true">Edit</button>' +
+          '<button type="button" class="btn-sm verify" data-id="' + escapeHtml(r.ID) + '" data-verified="true">Verifikasi</button>') +
+        '<button type="button" class="btn-sm delete" data-id="' + escapeHtml(r.ID) + '" data-delete="true">Hapus</button></div>';
+    }
+
     var buktiHtml = r.BuktiTransferURL
       ? '<a href="' + escapeHtml(r.BuktiTransferURL) + '" target="_blank" rel="noopener">Lihat file</a>'
       : '<span class="field-hint" style="margin:0;">via WhatsApp</span>';
-    return '<tr>' +
+    return '<tr data-row-id="' + escapeHtml(r.ID) + '">' +
       '<td>' + waktu + '</td>' +
-      '<td>' + escapeHtml(r.Nama) + '</td>' +
-      '<td>' + escapeHtml(r.WhatsApp) + '</td>' +
-      '<td>' + formatRupiah(r.Nominal) + '</td>' +
-      '<td>' + escapeHtml(r.TanggalTransfer) + '</td>' +
-      '<td>' + escapeHtml(r.Metode) + '</td>' +
-      '<td>' + escapeHtml(r.Catatan) + '</td>' +
+      submissionCell('Nama', r.Nama, editing) +
+      submissionCell('Angkatan', r.Angkatan, editing) +
+      submissionCell('WhatsApp', r.WhatsApp, editing) +
+      submissionCell('Nominal', r.Nominal, editing, 'number') +
+      submissionCell('TanggalTransfer', r.TanggalTransfer, editing) +
+      submissionCell('Metode', r.Metode, editing) +
+      submissionCell('Catatan', r.Catatan, editing) +
       '<td>' + buktiHtml + '</td>' +
       '<td>' + statusHtml + '</td>' +
       '<td>' + actionHtml + '</td>' +
@@ -669,6 +715,48 @@ document.getElementById('submissionsBody').addEventListener('click', function(e)
   if(!btn) return;
 
   var id = btn.getAttribute('data-id');
+
+  // ---- Edit (aktifkan input pada baris ini) ----
+  if(btn.hasAttribute('data-edit')){
+    editingSubmissionId = id;
+    renderSubmissions(lastSubmissionRows);
+    return;
+  }
+
+  // ---- Batal edit ----
+  if(btn.hasAttribute('data-cancel-edit')){
+    editingSubmissionId = null;
+    renderSubmissions(lastSubmissionRows);
+    return;
+  }
+
+  // ---- Simpan (edit sebelum verifikasi) ----
+  if(btn.hasAttribute('data-save')){
+    var fieldMap = { Nama:'nama', Angkatan:'angkatan', WhatsApp:'wa', Nominal:'nominal', TanggalTransfer:'tanggal', Metode:'metode', Catatan:'catatan' };
+    var tr = btn.closest('tr');
+    var fields = { password: getPassword(), id: id };
+    tr.querySelectorAll('.cell-input').forEach(function(input){
+      fields[fieldMap[input.getAttribute('data-field')]] = input.value;
+    });
+
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+    callApi('updateSubmission', fields).then(function(res){
+      if(res && res.ok){
+        editingSubmissionId = null;
+        loadSubmissions();
+      } else {
+        alert('Gagal menyimpan: ' + (res && res.error ? res.error : 'sesi admin mungkin sudah habis, coba masuk ulang.'));
+        btn.disabled = false;
+        btn.textContent = 'Simpan';
+      }
+    }).catch(function(){
+      alert('Gagal terhubung ke server.');
+      btn.disabled = false;
+      btn.textContent = 'Simpan';
+    });
+    return;
+  }
 
   // ---- Hapus ----
   if(btn.hasAttribute('data-delete')){
@@ -718,7 +806,7 @@ document.getElementById('submissionsBody').addEventListener('click', function(e)
 function loadSubmissions(){
   var body = document.getElementById('submissionsBody');
   var empty = document.getElementById('submissionsEmpty');
-  body.innerHTML = '<tr><td colspan="10" class="empty-note">Memuat...</td></tr>';
+  body.innerHTML = '<tr><td colspan="11" class="empty-note">Memuat...</td></tr>';
   empty.classList.add('hidden');
 
   callApi('listSubmissions', { password: getPassword() }).then(function(res){
@@ -755,6 +843,7 @@ document.getElementById('manualAddForm').addEventListener('submit', function(e){
 
   var fields = {
     nama: document.getElementById('maNama').value,
+    angkatan: document.getElementById('maAngkatan').value,
     wa: document.getElementById('maWa').value,
     nominal: document.getElementById('maNominal').value,
     tanggal: document.getElementById('maTanggal').value,
