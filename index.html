@@ -663,22 +663,28 @@ section{ position:relative; }
   border-bottom:1px solid var(--line);
 }
 .donor-list{ min-height:260px; max-height:340px; overflow-y:auto; }
-.donor-table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+.donor-table{ width:100%; border-collapse:collapse; font-size:.87rem; }
 .donor-table th, .donor-table td{
-  padding:.62em .85em; border-bottom:1px solid var(--line); border-right:1px solid var(--line);
-  text-align:left;
+  padding:.78em .9em; text-align:center; vertical-align:middle;
 }
-.donor-table th:last-child, .donor-table td:last-child{ border-right:none; }
 .donor-table thead th{
-  position:sticky; top:0; background:var(--gray-100); font-family:var(--font-mono);
-  font-size:.68rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft);
+  position:sticky; top:0; background:var(--card); font-family:var(--font-body);
+  font-size:.72rem; letter-spacing:.05em; text-transform:uppercase; font-weight:700;
+  color:var(--ink-soft); border-bottom:1px solid var(--line);
 }
-.donor-table tbody tr:last-child td{ border-bottom:none; }
-.donor-table th:first-child, .donor-table td:first-child{ width:2.6em; text-align:center; color:var(--ink-soft); }
-.donor-table th:last-child, .donor-table td:last-child{ text-align:right; }
-.donor-name{ color:var(--heading); font-weight:500; }
-.donor-nominal{ font-family:var(--font-mono); color:var(--gold-600); white-space:nowrap; font-variant-numeric:tabular-nums; }
-.donor-list-empty{ padding:1.1rem; font-size:.85rem; color:var(--ink-soft); text-align:center; border-right:none; }
+.donor-table tbody tr{ border-bottom:1px solid var(--line); transition:background-color .15s ease; }
+.donor-table tbody tr:last-child{ border-bottom:none; }
+.donor-table tbody tr:hover{ background:var(--gray-100); }
+.donor-table th:first-child, .donor-table td:first-child{ width:3em; }
+.donor-no-badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:1.9em; height:1.9em; border-radius:50%;
+  background:var(--sky-100); color:var(--navy-700);
+  font-family:var(--font-mono); font-size:.76rem; font-weight:700;
+}
+.donor-name{ color:var(--heading); font-weight:600; }
+.donor-nominal{ font-family:var(--font-mono); color:var(--gold-600); white-space:nowrap; font-variant-numeric:tabular-nums; font-weight:600; }
+.donor-list-empty{ padding:1.4rem; font-size:.85rem; color:var(--ink-soft); text-align:center; }
 
 .budget-note{
   background:linear-gradient(160deg, var(--navy-950), var(--navy-800));
@@ -1434,7 +1440,10 @@ var IKASI_API_URL = "https://script.google.com/macros/s/AKfycbz-i6yZJHrgCTceXSg4
         var tr = document.createElement('tr');
 
         var noTd = document.createElement('td');
-        noTd.textContent = idx + 1;
+        var noBadge = document.createElement('span');
+        noBadge.className = 'donor-no-badge';
+        noBadge.textContent = idx + 1;
+        noTd.appendChild(noBadge);
         tr.appendChild(noTd);
 
         var nameTd = document.createElement('td');
