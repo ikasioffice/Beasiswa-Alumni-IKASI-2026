@@ -663,15 +663,22 @@ section{ position:relative; }
   border-bottom:1px solid var(--line);
 }
 .donor-list{ min-height:260px; max-height:340px; overflow-y:auto; }
-.donor-row{
-  display:flex; justify-content:space-between; align-items:baseline; gap:.9rem;
-  padding:.65rem 1.1rem; border-bottom:1px solid var(--line); font-size:.86rem;
+.donor-table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+.donor-table th, .donor-table td{
+  padding:.62em .85em; border-bottom:1px solid var(--line); border-right:1px solid var(--line);
+  text-align:left;
 }
-.donor-row:last-child{ border-bottom:none; }
+.donor-table th:last-child, .donor-table td:last-child{ border-right:none; }
+.donor-table thead th{
+  position:sticky; top:0; background:var(--gray-100); font-family:var(--font-mono);
+  font-size:.68rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft);
+}
+.donor-table tbody tr:last-child td{ border-bottom:none; }
+.donor-table th:first-child, .donor-table td:first-child{ width:2.6em; text-align:center; color:var(--ink-soft); }
+.donor-table th:last-child, .donor-table td:last-child{ text-align:right; }
 .donor-name{ color:var(--heading); font-weight:500; }
-.donor-angkatan{ color:var(--ink-soft); font-size:.78rem; margin-left:.4em; }
 .donor-nominal{ font-family:var(--font-mono); color:var(--gold-600); white-space:nowrap; font-variant-numeric:tabular-nums; }
-.donor-list-empty{ padding:1.1rem; font-size:.85rem; color:var(--ink-soft); text-align:center; }
+.donor-list-empty{ padding:1.1rem; font-size:.85rem; color:var(--ink-soft); text-align:center; border-right:none; }
 
 .budget-note{
   background:linear-gradient(160deg, var(--navy-950), var(--navy-800));
@@ -1102,8 +1109,20 @@ section{ position:relative; }
           <div class="budget-raised-big" id="raisedBigVal">Rp 0<span>terkumpul</span></div>
           <div class="donor-list-wrap">
             <div class="donor-list-head">Data Alumni yang Memberi Dukungan</div>
-            <div class="donor-list" id="donorList">
-              <p class="donor-list-empty">Belum ada data dukungan yang terverifikasi.</p>
+            <div class="donor-list">
+              <table class="donor-table">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Nama</th>
+                    <th>Angkatan</th>
+                    <th>Nominal</th>
+                  </tr>
+                </thead>
+                <tbody id="donorList">
+                  <tr><td colspan="4" class="donor-list-empty">Belum ada data dukungan yang terverifikasi.</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -1407,33 +1426,32 @@ var IKASI_API_URL = "https://script.google.com/macros/s/AKfycbz-i6yZJHrgCTceXSg4
       var listEl = document.getElementById('donorList');
       if(!listEl || !res || !res.ok || !res.rows) return;
       if(res.rows.length === 0){
-        listEl.innerHTML = '<p class="donor-list-empty">Belum ada data dukungan yang terverifikasi.</p>';
+        listEl.innerHTML = '<tr><td colspan="4" class="donor-list-empty">Belum ada data dukungan yang terverifikasi.</td></tr>';
         return;
       }
       listEl.innerHTML = '';
-      res.rows.forEach(function(row){
-        var item = document.createElement('div');
-        item.className = 'donor-row';
+      res.rows.forEach(function(row, idx){
+        var tr = document.createElement('tr');
 
-        var who = document.createElement('span');
-        var nameSpan = document.createElement('span');
-        nameSpan.className = 'donor-name';
-        nameSpan.textContent = row.nama || 'Alumni';
-        who.appendChild(nameSpan);
-        if(row.angkatan){
-          var angkatanSpan = document.createElement('span');
-          angkatanSpan.className = 'donor-angkatan';
-          angkatanSpan.textContent = 'Angkatan ' + row.angkatan;
-          who.appendChild(angkatanSpan);
-        }
+        var noTd = document.createElement('td');
+        noTd.textContent = idx + 1;
+        tr.appendChild(noTd);
 
-        var nominal = document.createElement('span');
-        nominal.className = 'donor-nominal';
-        nominal.textContent = formatRupiah(row.nominal);
+        var nameTd = document.createElement('td');
+        nameTd.className = 'donor-name';
+        nameTd.textContent = row.nama || 'Alumni';
+        tr.appendChild(nameTd);
 
-        item.appendChild(who);
-        item.appendChild(nominal);
-        listEl.appendChild(item);
+        var angkatanTd = document.createElement('td');
+        angkatanTd.textContent = row.angkatan || '-';
+        tr.appendChild(angkatanTd);
+
+        var nominalTd = document.createElement('td');
+        nominalTd.className = 'donor-nominal';
+        nominalTd.textContent = formatRupiah(row.nominal);
+        tr.appendChild(nominalTd);
+
+        listEl.appendChild(tr);
       });
     }).catch(function(){ /* biarkan kotak kosong jika gagal memuat */ });
   }
